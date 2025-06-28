@@ -25,9 +25,22 @@ class AuthService {
         await storage.write(key: 'token', value: data['token']);
         await storage.write(key: 'user', value: jsonEncode(data['user']));
 
+        // Gestion des rôles avec vérification
+        String? role;
+        if (data['user']['roles'] != null && data['user']['roles'].isNotEmpty) {
+          role = data['user']['roles'][0]['roleName'] as String;
+          await storage.write(key: 'role', value: role);
+        } else {
+          await storage.write(
+            key: 'role',
+            value: 'aucun',
+          ); // Ou null si vous préférez
+        }
+
         return {
           'token': data['token'],
           'user': data['user'],
+          'role': role ?? 'aucun', // Valeur par défaut si null
           'message': data['message'],
         };
       } else {
@@ -35,6 +48,45 @@ class AuthService {
       }
     } catch (e) {
       throw Exception(e.toString());
+    }
+  }
+
+  Future<String?> getStoredUserRole() async {
+    try {
+      // Récupérer le rôle depuis le stockage
+      final role = await storage.read(key: 'role');
+      return role;
+    } catch (e) {
+      print('Erreur lors de la récupération du rôle: $e');
+      return null;
+    }
+  }
+
+  bool isClient(String? role) {
+    return role?.toLowerCase() == 'client';
+  }
+
+  bool isAnnonceur(String? role) {
+    return role?.toLowerCase() == 'annonceur';
+  }
+
+  Future<int?> checkUserRole() async {
+    final role = await getStoredUserRole();
+
+    if (role == null) {
+      print('Aucun rôle trouvé');
+      return null;
+    }
+
+    if (isClient(role)) {
+      print('Utilisateur est un client');
+      return 1;
+    } else if (isAnnonceur(role)) {
+      print('Utilisateur est un annonceur');
+      return 0;
+    } else {
+      print('Rôle inconnu: $role');
+      return null;
     }
   }
 

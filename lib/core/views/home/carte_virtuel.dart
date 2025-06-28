@@ -867,26 +867,5 @@ class _VirtualCardScreenState extends State<VirtualCardScreen>
       ),
     );
   }
-
-  void _shareCard() {
-    HapticFeedback.lightImpact();
-    // Implement share functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Fonctionnalité de partage à implémenter'),
-        backgroundColor: Colors.blue,
-      ),
-    );
-  }
-
-  void _saveCard() {
-    HapticFeedback.lightImpact();
-    // Implement save functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Carte sauvegardée dans la galerie'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
+  
 }

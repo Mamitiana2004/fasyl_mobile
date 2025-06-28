@@ -24,8 +24,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     with TickerProviderStateMixin {
   final storage = FlutterSecureStorage();
   Map<String, dynamic>? user;
+  String? userRole;
   bool _isLoading = true;
-  String baseUrl = "http://backend.groupe-syl.com/backend-preprod/upload";
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -55,6 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> _loadUserData() async {
     final userJson = await storage.read(key: 'user');
+    final role = await storage.read(key: 'role');
 
     if (userJson == null) {
       Navigator.pushReplacement(
@@ -66,11 +67,15 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     setState(() {
       user = jsonDecode(userJson);
+      userRole = role;
       _isLoading = false;
     });
 
     _animationController.forward();
   }
+
+  bool get isClient => userRole?.toLowerCase() == 'client';
+  bool get isAnnonceur => userRole?.toLowerCase() == 'annonceur';
 
   @override
   Widget build(BuildContext context) {
@@ -302,6 +307,39 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
             ),
           ),
+          SizedBox(height: 12),
+          // Badge du rôle
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                colors: isClient
+                    ? [
+                        Colors.blue.withOpacity(0.3),
+                        Colors.cyan.withOpacity(0.3),
+                      ]
+                    : [
+                        Colors.orange.withOpacity(0.3),
+                        Colors.deepOrange.withOpacity(0.3),
+                      ],
+              ),
+              border: Border.all(
+                color: isClient
+                    ? Colors.blue.withOpacity(0.5)
+                    : Colors.orange.withOpacity(0.5),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              isClient ? 'Client' : 'Annonceur',
+              style: TextStyle(
+                color: isClient ? Colors.blue : Colors.orange,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -327,20 +365,31 @@ class _ProfileScreenState extends State<ProfileScreen>
             children: [
               Expanded(
                 child: _buildActionCard(
-                  icon: Icons.credit_card_rounded,
-                  title: 'Carte Virtuelle',
-                  subtitle: 'Gérer ma carte',
+                  icon: isClient
+                      ? Icons.credit_card_rounded
+                      : Icons.qr_code_scanner_rounded,
+                  title: isClient ? 'Carte Virtuelle' : 'Scanner Carte',
+                  subtitle: isClient ? 'Gérer ma carte' : 'Scanner une carte',
                   colors: [
                     AppColor.primary.withOpacity(0.01),
                     AppColor.primary.withOpacity(0),
                   ],
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => VirtualCardScreen(),
-                      ),
-                    );
+                    if (isClient) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => VirtualCardScreen(),
+                        ),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ScannerScreen(),
+                        ),
+                      );
+                    }
                   },
                 ),
               ),

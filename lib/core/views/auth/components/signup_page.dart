@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:fasyl/core/config/constants.dart';
+import 'package:fasyl/core/views/auth/auth_screen.dart';
 import 'package:fasyl/core/views/auth/verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -138,7 +139,7 @@ class _SignUpPageState extends State<SignUpPage>
         if (mounted) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const VerificationScreen()),
+            MaterialPageRoute(builder: (context) => AuthScreen(selectedIndex: 1,)),
           );
         }
       } else {
