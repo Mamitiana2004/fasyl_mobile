@@ -1,19 +1,64 @@
 workflows:
-  flutter-app:
-    name: Flutter App Workflow
+  android-workflow:
+    name: Android Workflow
+    instance_type: mac_mini_m2
+    max_build_duration: 120
     environment:
-      groups:
-        - keystore
       flutter: stable
     scripts:
-      - flutter pub get
-      - flutter test
-      - flutter build apk --no-tree-shake-icons
-      - flutter build ipa --export-options-plist=ios/ExportOptions.plist
+      - name: Set up local.properties
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Flutter analyze
+        script: |
+          flutter analyze
+      - name: Flutter unit tests
+        script: |
+          flutter test
+        ignore_failure: true
+      - name: Build AAB with Flutter
+        script:    
+          flutter build apk --no-tree-shake-icons
     artifacts:
       - build/**/outputs/**/*.apk
+  ios-workflow:
+    name: iOS Workflow
+    instance_type: mac_mini_m2
+    max_build_duration: 120
+    integrations:
+      app_store_connect: codemagic
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Install pods
+        script: |
+          find . -name "Podfile" -execdir pod install \;
+      - name: Flutter analyze
+        script: |
+          flutter analyze
+      - name: Flutter unit tests
+        script: |
+          flutter test
+        ignore_failure: true
+      - name: Flutter build ipa and automatic versioning
+        script: |
+          flutter build ipa --release \
+            --build-name=1.0.0 \
+            --build-number=$(($(app-store-connect get-latest-testflight-build-number --platform=IOS "$APP_ID") + 1)) \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
       - build/ios/ipa/*.ipa
-    publishing:
-      email:
-        recipients:
-          - mamitianafaneva2004@gmail.com
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+
