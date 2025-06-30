@@ -1,0 +1,19 @@
+workflows:
+  flutter-app:
+    name: Flutter App Workflow
+    environment:
+      groups:
+        - keystore
+      flutter: stable
+    scripts:
+      - flutter pub get
+      - flutter test
+      - flutter build apk --no-tree-shake-icons
+      - flutter build ipa --export-options-plist=ios/ExportOptions.plist
+    artifacts:
+      - build/**/outputs/**/*.apk
+      - build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - mamitianafaneva2004@gmail.com
