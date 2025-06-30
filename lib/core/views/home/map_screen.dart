@@ -114,7 +114,7 @@ class _MapScreenState extends State<MapScreen> {
     try {
       final response = await http.post(
         Uri.parse(
-          'http://backend.groupe-syl.com/backend-preprod/api/service/near',
+          'http://backend.groupe-syl.com/backend-preprod/api/v2/service/near',
         ),
         headers: {
           'Content-Type': 'application/json',

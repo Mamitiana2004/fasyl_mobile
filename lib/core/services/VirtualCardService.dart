@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:fasyl/core/config/constants.dart';
-import 'package:fasyl/core/models/virtual_card_model.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
@@ -14,7 +13,7 @@ class VirtualCardService {
       String? token = await storage.read(key: 'token');
 
       final response = await http.get(
-        Uri.parse('$baseUrl/api/virtual-card'),
+        Uri.parse('$baseUrl/api/v2/virtual-card'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

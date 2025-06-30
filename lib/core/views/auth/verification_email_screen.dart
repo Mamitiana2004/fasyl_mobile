@@ -4,10 +4,14 @@ import 'package:fasyl/core/views/auth/new_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'dart:async';
 
 class VerificationEmailScreen extends StatefulWidget {
-  const VerificationEmailScreen({super.key});
+  final String email;
+
+  const VerificationEmailScreen({super.key, required this.email});
 
   @override
   State<VerificationEmailScreen> createState() =>
@@ -27,17 +31,19 @@ class _VerificationEmailScreenState extends State<VerificationEmailScreen>
   late Animation<double> _pulseAnimation;
   late Animation<double> _shakeAnimation;
 
-  String _storedEmail = "";
   String _errorMessage = "";
   bool _isLoading = false;
   bool _canResend = true;
   int _resendCountdown = 0;
   Timer? _resendTimer;
 
+  // API endpoint
+  static const String _verifyOtpUrl =
+      'http://backend.groupe-syl.com/backend-preprod/api/v2/auth/users/verify-otp';
+
   @override
   void initState() {
     super.initState();
-    _loadEmailStored();
     _setupAnimations();
     _animationController.forward();
     _pulseController.repeat(reverse: true);
@@ -85,11 +91,6 @@ class _VerificationEmailScreenState extends State<VerificationEmailScreen>
     super.dispose();
   }
 
-  Future<void> _loadEmailStored() async {
-    final storedEmail = await _storage.read(key: "email_verify");
-    setState(() => _storedEmail = storedEmail ?? "exemple@email.com");
-  }
-
   Future<void> _verifyOtp() async {
     if (_codeController.text.length != 6) {
       setState(
@@ -105,35 +106,91 @@ class _VerificationEmailScreenState extends State<VerificationEmailScreen>
     });
 
     try {
-      // Simulate API call
-      await Future.delayed(Duration(milliseconds: 1500));
-
-      // Show success feedback
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 12),
-              Text('Code vérifié avec succès !'),
-            ],
-          ),
-          backgroundColor: Colors.green.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: EdgeInsets.all(16),
-        ),
+      final response = await http.post(
+        Uri.parse(_verifyOtpUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({'email': widget.email, 'otp': _codeController.text}),
       );
 
-      await Future.delayed(Duration(milliseconds: 500));
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => NewPasswordScreen()),
-      );
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        // Vérifier si la réponse indique un succès
+        if (responseData['token'] != null) {
+          await _storage.write(
+            key: 'auth_token',
+            value: responseData['data']['token'],
+          );
+
+          // Afficher le message de succès
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.white),
+                    SizedBox(width: 12),
+                    Text('Code vérifié avec succès !'),
+                  ],
+                ),
+                backgroundColor: Colors.green.shade600,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: EdgeInsets.all(16),
+              ),
+            );
+
+            await Future.delayed(Duration(milliseconds: 500));
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => NewPasswordScreen(email: widget.email),
+              ),
+            );
+          }
+        } else {
+          // Gestion des erreurs de l'API
+          String errorMsg = "Code incorrect. Veuillez réessayer.";
+          if (responseData['message'] != null) {
+            errorMsg = responseData['message'];
+          }
+          setState(() => _errorMessage = errorMsg);
+          _shakeController.forward().then((_) => _shakeController.reset());
+        }
+      } else if (response.statusCode == 400) {
+        // Code invalide ou expiré
+        final responseData = jsonDecode(response.body);
+        String errorMsg = "Code incorrect ou expiré.";
+        if (responseData['message'] != null) {
+          errorMsg = responseData['message'];
+        }
+        setState(() => _errorMessage = errorMsg);
+        _shakeController.forward().then((_) => _shakeController.reset());
+      } else if (response.statusCode == 404) {
+        setState(() => _errorMessage = "Email non trouvé.");
+        _shakeController.forward().then((_) => _shakeController.reset());
+      } else if (response.statusCode == 429) {
+        setState(
+          () => _errorMessage =
+              "Trop de tentatives. Veuillez réessayer plus tard.",
+        );
+        _shakeController.forward().then((_) => _shakeController.reset());
+      } else {
+        setState(
+          () => _errorMessage = "Erreur de connexion. Veuillez réessayer.",
+        );
+        _shakeController.forward().then((_) => _shakeController.reset());
+      }
     } catch (e) {
-      setState(() => _errorMessage = "Code incorrect. Veuillez réessayer.");
+      setState(
+        () => _errorMessage =
+            "Erreur de connexion. Vérifiez votre connexion internet.",
+      );
       _shakeController.forward().then((_) => _shakeController.reset());
     } finally {
       if (mounted) {
@@ -163,21 +220,28 @@ class _VerificationEmailScreenState extends State<VerificationEmailScreen>
   Future<void> _resendCode() async {
     if (!_canResend) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.email_outlined, color: Colors.white),
-            SizedBox(width: 12),
-            Text('Nouveau code envoyé !'),
-          ],
+    // Ici vous pouvez ajouter l'appel API pour renvoyer le code
+    // Par exemple: await _auth.resendOtp(widget.email);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.email_outlined, color: Colors.white),
+              SizedBox(width: 12),
+              Text('Nouveau code envoyé !'),
+            ],
+          ),
+          backgroundColor: Colors.blue.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: EdgeInsets.all(16),
         ),
-        backgroundColor: Colors.blue.shade600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: EdgeInsets.all(16),
-      ),
-    );
+      );
+    }
 
     _startResendCountdown();
   }
@@ -331,7 +395,7 @@ class _VerificationEmailScreenState extends State<VerificationEmailScreen>
                                       "Nous avons envoyé un code de vérification à\n",
                                 ),
                                 TextSpan(
-                                  text: _storedEmail,
+                                  text: widget.email,
                                   style: TextStyle(
                                     color: AppColor.primary,
                                     fontWeight: FontWeight.w600,

@@ -14,25 +14,23 @@ class Service {
   Future<dynamic> getAllPopular() async {
     try {
       final response = await http.get(
-        Uri.parse('${baseUrl}api/service/popular'),
+        Uri.parse('${baseUrl}api/v2/service/popular'),
       );
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       }
-      
+
       return null;
     } catch (e) {
       logger.i(e);
       return {'error': 'Erreur de connexion:'};
     }
   }
-  
+
   Future<dynamic> getAll() async {
     try {
-      final response = await http.get(
-        Uri.parse('${baseUrl}api/service'),
-      );
+      final response = await http.get(Uri.parse('${baseUrl}api/service'));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -43,12 +41,10 @@ class Service {
       return {'error': 'Erreur de connexion:'};
     }
   }
-  
+
   Future<dynamic> getById(id) async {
     try {
-      final response = await http.get(
-        Uri.parse('${baseUrl}api/service/$id'),
-      );
+      final response = await http.get(Uri.parse('${baseUrl}api/service/$id'));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);

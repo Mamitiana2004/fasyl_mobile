@@ -20,7 +20,7 @@ class AbonnementService {
       }
 
       final response = await http.get(
-        Uri.parse('${baseUrl}api/abonnement/user-abonnement'),
+        Uri.parse('${baseUrl}api/v2/abonnement/user-abonnement'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
@@ -46,7 +46,7 @@ class AbonnementService {
   Future<bool> updateAbonnement(int clientId, int abonnementId) async {
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/api/client/$clientId/abonnement/$abonnementId'),
+        Uri.parse('$baseUrl/api/v2/client/$clientId/abonnement/$abonnementId'),
       );
 
       if (response.statusCode == 200) {

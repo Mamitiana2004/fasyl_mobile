@@ -2,9 +2,17 @@ import 'package:fasyl/core/config/constants.dart';
 import 'package:fasyl/core/views/auth/auth_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class NewPasswordScreen extends StatefulWidget {
-  const NewPasswordScreen({super.key});
+  final String email;
+  
+  const NewPasswordScreen({
+    super.key,
+    required this.email,
+  });
 
   @override
   State<NewPasswordScreen> createState() => _NewPasswordScreenState();
@@ -48,24 +56,102 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
     super.dispose();
   }
 
-  void _submitNewPassword() {
+  Future<void> _submitNewPassword() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       HapticFeedback.lightImpact();
 
-      // Simuler un traitement
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) => AuthScreen(selectedIndex: 1),
-            transitionsBuilder: (_, animation, __, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-          ),
+      try {
+        // Récupération du token depuis le storage
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('auth_token');
+
+        if (token == null) {
+          _showErrorSnackBar('Token d\'authentification manquant');
+          setState(() => _isLoading = false);
+          return;
+        }
+
+        // Préparation de la requête API
+        final url = Uri.parse(
+          'http://backend.groupe-syl.com/backend-preprod/api/v2/auth/users/forgot-password-challenge?token=$token'
         );
-      });
+
+        final body = {
+          'email': widget.email,
+          'password': _passwordController.text,
+        };
+
+        // Envoi de la requête
+        final response = await http.post(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: jsonEncode(body),
+        );
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          // Succès
+          _showSuccessSnackBar('Mot de passe modifié avec succès');
+          
+          // Navigation vers l'écran d'authentification après un délai
+          await Future.delayed(const Duration(seconds: 1));
+          
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (_, __, ___) => AuthScreen(selectedIndex: 1),
+                transitionsBuilder: (_, animation, __, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+              ),
+            );
+          }
+        } else {
+          // Erreur du serveur
+          final errorData = jsonDecode(response.body);
+          final errorMessage = errorData['message'] ?? 'Erreur lors de la modification du mot de passe';
+          _showErrorSnackBar(errorMessage);
+        }
+      } catch (e) {
+        // Erreur de connexion ou autre
+        _showErrorSnackBar('Erreur de connexion. Veuillez réessayer.');
+        print('Erreur API: $e');
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     }
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColor.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
   }
 
   @override
@@ -155,7 +241,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                "Créez un nouveau mot de passe différent de l'ancien",
+                                "Créez un nouveau mot de passe pour ${widget.email}",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.8),
@@ -165,23 +251,6 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
                             ],
                           ),
                           const SizedBox(height: 40),
-
-                          // Old Password Field
-                          _PasswordField(
-                            controller: _oldPasswordController,
-                            label: "Ancien mot de passe",
-                            obscureText: _obscureOldPassword,
-                            onToggleVisibility: () {
-                              setState(() => _obscureOldPassword = !_obscureOldPassword);
-                            },
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Veuillez entrer votre ancien mot de passe';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
 
                           // New Password Field
                           _PasswordField(
@@ -197,9 +266,6 @@ class _NewPasswordScreenState extends State<NewPasswordScreen>
                               }
                               if (value.length < 6) {
                                 return '6 caractères minimum';
-                              }
-                              if (value == _oldPasswordController.text) {
-                                return 'Doit être différent de l\'ancien mot de passe';
                               }
                               return null;
                             },

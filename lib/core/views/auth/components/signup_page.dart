@@ -118,8 +118,8 @@ class _SignUpPageState extends State<SignUpPage>
       };
 
       final endpoint = _accountType == 0
-          ? "http://backend.groupe-syl.com/backend-preprod/api/auth/register/client"
-          : "http://backend.groupe-syl.com/backend-preprod/api/auth/register/annonceur";
+          ? "http://backend.groupe-syl.com/backend-preprod/api/v2/auth/register/client"
+          : "http://backend.groupe-syl.com/backend-preprod/api/v2/auth/register/annonceur";
 
       final request = http.MultipartRequest('POST', Uri.parse(endpoint));
       request.fields['data'] = jsonEncode(userData);
@@ -139,7 +139,9 @@ class _SignUpPageState extends State<SignUpPage>
         if (mounted) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AuthScreen(selectedIndex: 1,)),
+            MaterialPageRoute(
+              builder: (context) => AuthScreen(selectedIndex: 1),
+            ),
           );
         }
       } else {
@@ -202,11 +204,7 @@ class _SignUpPageState extends State<SignUpPage>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppColor.secondaryDarker,
-              AppColor.secondary,
-              AppColor.secondaryMedium,
-            ],
+            colors: [AppColor.secondary.withOpacity(0.1), Colors.transparent],
           ),
         ),
         child: SafeArea(

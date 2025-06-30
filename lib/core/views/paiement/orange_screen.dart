@@ -1,9 +1,17 @@
+import 'dart:convert';
+
 import 'package:fasyl/core/config/constants.dart';
 import 'package:fasyl/core/models/abonnement_models.dart';
+import 'package:fasyl/core/services/abonnement_service.dart';
+import 'package:fasyl/core/views/abonnement/abonnement_screen.dart';
+import 'package:fasyl/core/views/auth/auth_screen.dart';
+import 'package:fasyl/core/views/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:math' as math;
+
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class OrangeScreen extends StatefulWidget {
   final AbonnementModel abonnement;
@@ -19,6 +27,10 @@ class _OrangeScreenState extends State<OrangeScreen>
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  final storage = FlutterSecureStorage();
+  Map<String, dynamic>? user;
+
+  AbonnementService abonnementService = AbonnementService();
 
   late AnimationController _animationController;
   late AnimationController _pulseController;
@@ -33,6 +45,25 @@ class _OrangeScreenState extends State<OrangeScreen>
   void initState() {
     super.initState();
     _initAnimations();
+  }
+
+  Future<void> _loadUserData() async {
+    final userJson = await storage.read(key: 'user');
+
+    if (userJson == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => AuthScreen(selectedIndex: 1)),
+      );
+      return;
+    }
+
+    setState(() {
+      user = jsonDecode(userJson);
+      _isLoading = false;
+    });
+
+    _animationController.forward();
   }
 
   void _initAnimations() {
@@ -267,9 +298,22 @@ class _OrangeScreenState extends State<OrangeScreen>
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pop();
+                      onPressed:  () async {
+                        try {
+                          final success = await abonnementService
+                              .updateAbonnement(
+                                user?["id"],
+                                widget.abonnement.id,
+                              );
+                              Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => HomeScreen(),
+                              ),
+                            );
+                        } catch (e) {
+                          print('Erreur: $e');
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColor.primary,

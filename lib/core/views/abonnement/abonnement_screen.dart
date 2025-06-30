@@ -33,7 +33,7 @@ class _AbonnementScreenState extends State<AbonnementScreen> {
       });
 
       final response = await http.get(
-        Uri.parse('http://backend.groupe-syl.com/backend-preprod/api/abonnement'),
+        Uri.parse('http://backend.groupe-syl.com/backend-preprod/api/v2/abonnement'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -87,10 +87,6 @@ class _AbonnementScreenState extends State<AbonnementScreen> {
                   children: [
                     Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 24),
-                          onPressed: () => Navigator.pop(context),
-                        ),
                         const Spacer(),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

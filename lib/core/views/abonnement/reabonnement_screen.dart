@@ -397,9 +397,9 @@ class CurrentSubscriptionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('dd/MM/yyyy');
-    final startDate = DateTime.parse('2025-06-15');
-    final endDate = DateTime.parse('2025-07-15');
-    final daysLeft = 30;
+    final startDate = subscription.createdAt;
+    final endDate = subscription.getEndDate();
+    final daysLeft = subscription.getRemainingDays();
 
     return Container(
       padding: const EdgeInsets.all(24),

@@ -115,12 +115,9 @@ class _ScannerScreenState extends State<ScannerScreen>
     try {
       final response = await http.get(
         Uri.parse(
-          'http://backend.groupe-syl.com/backend-preprod/api/virtual-card/validate/$cardNumber',
+          'http://backend.groupe-syl.com/backend-preprod/api/v2/virtual-card/validate/$cardNumber',
         ),
-        headers: {
-          'Content-Type': 'application/json',
-          // Ajoutez ici vos headers d'authentification si nécessaire
-        },
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
@@ -243,30 +240,6 @@ class _ScannerScreenState extends State<ScannerScreen>
                       borderRadius: BorderRadius.circular(16),
                       color: Colors.white.withOpacity(0.1),
                       border: Border.all(color: Colors.white.withOpacity(0.2)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildValidationDetail(
-                          'Nom',
-                          cardData['holderName'] ?? 'N/A',
-                        ),
-                        SizedBox(height: 8),
-                        _buildValidationDetail(
-                          'Numéro',
-                          cardData['cardNumber'] ?? 'N/A',
-                        ),
-                        SizedBox(height: 8),
-                        _buildValidationDetail(
-                          'Type',
-                          cardData['membershipType'] ?? 'N/A',
-                        ),
-                        SizedBox(height: 8),
-                        _buildValidationDetail(
-                          'Statut',
-                          cardData['status'] ?? 'N/A',
-                        ),
-                      ],
                     ),
                   ),
                 ] else if (!isValid) ...[
@@ -581,7 +554,7 @@ class _ScannerScreenState extends State<ScannerScreen>
         Expanded(
           flex: 1,
           child: Container(
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.all(10),
             child: Column(
               children: [
                 Text(
@@ -593,16 +566,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 8),
-                Text(
-                  'Le scan sera automatiquement validé',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 20),
+                SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: _stopScanning,
                   style: ElevatedButton.styleFrom(
@@ -803,158 +767,222 @@ class _ScannerScreenState extends State<ScannerScreen>
       onTap: _startScanning,
       child: Container(
         width: double.infinity,
-        height: 220,
+        height: 260,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(7),
+          borderRadius: BorderRadius.circular(24),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0x00000000),
-              AppColor.secondaryDarker,
-              AppColor.secondaryDark,
-            ],
+            colors: [Color(0xFF0B0924), Color(0xFF000000), Color(0xFF818181)],
+            stops: [0.0, 0.6, 1.0],
           ),
           boxShadow: [
             BoxShadow(
-              color: Color(0xFF667eea).withOpacity(0.4),
-              blurRadius: 25,
-              offset: Offset(0, 15),
+              color: Color(0xFF5E5E5E).withOpacity(0.4),
+              blurRadius: 32,
+              offset: Offset(0, 16),
+              spreadRadius: -8,
+            ),
+            BoxShadow(
+              color: Color(0xFF5E5E5E).withOpacity(0.3),
+              blurRadius: 24,
+              offset: Offset(0, 8),
+              spreadRadius: -4,
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            // Shimmer effect
-            AnimatedBuilder(
-              animation: _shimmerAnimation,
-              builder: (context, child) {
-                return Positioned(
-                  left: _shimmerAnimation.value * 200,
-                  child: Container(
-                    width: 100,
-                    height: 220,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.transparent,
-                          Colors.white.withOpacity(0.3),
-                          Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              // Background pattern overlay
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withOpacity(0.1),
+                      Colors.transparent,
+                      Colors.white.withOpacity(0.05),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Geometric decorative elements
+              Positioned(
+                top: -20,
+                right: -20,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.08),
+                  ),
+                ),
+              ),
+
+              Positioned(
+                top: 40,
+                right: 30,
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+
+              Positioned(
+                bottom: -30,
+                left: -30,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.white.withOpacity(0.06),
+                  ),
+                ),
+              ),
+
+              // QR code pattern decoration
+              Positioned(
+                top: 20,
+                left: 20,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  child: CustomPaint(painter: QRPatternPainter()),
+                ),
+              ),
+
+              // Main content
+              Center(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Icon container with modern design
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            Colors.white,
+                            Colors.white.withOpacity(0.95),
+                            Colors.white.withOpacity(0.85),
+                          ],
+                          stops: [0.0, 0.7, 1.0],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
+                          ),
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.2),
+                            blurRadius: 30,
+                            offset: Offset(0, -5),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.qr_code_scanner_rounded,
+                        color: Color(0xFF4f46e5),
+                        size: 50,
+                      ),
+                    ),
+
+                    SizedBox(height: 28),
+
+                    // Title with modern typography
+                    Text(
+                      'SCANNER QR',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 4,
+                        height: 1.1,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.25),
+                            offset: Offset(0, 2),
+                            blurRadius: 8,
+                          ),
                         ],
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
-            // Card content
-            Padding(
-              padding: EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [Colors.blue, Colors.purple, Colors.pink],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blue.withOpacity(0.4),
-                          blurRadius: 15,
-                          offset: Offset(0, 8),
-                        ),
-                      ],
+                  ],
+                ),
+              ),
+
+              // Top corner accent
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(24),
+                      bottomLeft: Radius.circular(40),
                     ),
-                    child: Icon(
-                      Icons.qr_code_scanner,
-                      color: Colors.white,
-                      size: 40,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    'SCANNER QR CODE',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'Appuyez pour scanner',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.white.withOpacity(0.1),
-                      border: Border.all(color: Colors.white.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.touch_app,
-                          color: Colors.white.withOpacity(0.8),
-                          size: 16,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Validation automatique',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 14,
-                          ),
-                        ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topRight,
+                      end: Alignment.bottomLeft,
+                      colors: [
+                        Colors.white.withOpacity(0.2),
+                        Colors.white.withOpacity(0.05),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            // Decorative circles
-            Positioned(
-              top: -50,
-              right: -50,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
                 ),
               ),
-            ),
-            Positioned(
-              bottom: -30,
-              left: -30,
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.05),
+
+              // Bottom corner accent
+              Positioned(
+                bottom: 0,
+                left: 0,
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(24),
+                      topRight: Radius.circular(30),
+                    ),
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomLeft,
+                      end: Alignment.topRight,
+                      colors: [
+                        Colors.white.withOpacity(0.15),
+                        Colors.white.withOpacity(0.03),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+
+  // Custom painter for QR pattern decoration
 
   Widget _buildMembershipDetails() {
     return Container(
@@ -1085,4 +1113,35 @@ class _ScannerScreenState extends State<ScannerScreen>
       ),
     );
   }
+}
+
+class QRPatternPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.3)
+      ..style = PaintingStyle.fill;
+
+    // Create a simple QR-like pattern
+    final blockSize = size.width / 5;
+
+    for (int i = 0; i < 5; i++) {
+      for (int j = 0; j < 5; j++) {
+        if ((i + j) % 2 == 0) {
+          canvas.drawRect(
+            Rect.fromLTWH(
+              i * blockSize,
+              j * blockSize,
+              blockSize * 0.8,
+              blockSize * 0.8,
+            ),
+            paint,
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

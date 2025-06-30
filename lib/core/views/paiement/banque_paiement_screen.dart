@@ -1,7 +1,13 @@
+import 'dart:convert';
+
 import 'package:fasyl/core/config/constants.dart';
 import 'package:fasyl/core/models/abonnement_models.dart';
+import 'package:fasyl/core/services/abonnement_service.dart';
+import 'package:fasyl/core/views/auth/auth_screen.dart';
+import 'package:fasyl/core/views/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class CardPaymentScreen extends StatefulWidget {
   final AbonnementModel abonnement;
@@ -20,6 +26,12 @@ class _CardPaymentScreenState extends State<CardPaymentScreen>
   final TextEditingController _cvvController = TextEditingController();
   final TextEditingController _cardHolderController = TextEditingController();
 
+  final storage = FlutterSecureStorage();
+
+  Map<String, dynamic>? user;
+
+  AbonnementService abonnementService = AbonnementService();
+
   bool _isLoading = false;
   String _selectedCardType = '';
 
@@ -36,6 +48,26 @@ class _CardPaymentScreenState extends State<CardPaymentScreen>
   void initState() {
     super.initState();
     _initAnimations();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final userJson = await storage.read(key: 'user');
+
+    if (userJson == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => AuthScreen(selectedIndex: 1)),
+      );
+      return;
+    }
+
+    setState(() {
+      user = jsonDecode(userJson);
+      _isLoading = false;
+    });
+
+    _animationController.forward();
   }
 
   void _initAnimations() {
@@ -275,9 +307,22 @@ class _CardPaymentScreenState extends State<CardPaymentScreen>
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pop();
+                      onPressed: () async {
+                        try {
+                          final success = await abonnementService
+                              .updateAbonnement(
+                                user?["id"],
+                                widget.abonnement.id,
+                              );
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => HomeScreen(),
+                            ),
+                          );
+                        } catch (e) {
+                          print('Erreur: $e');
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColor.primary,

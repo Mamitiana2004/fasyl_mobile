@@ -45,5 +45,21 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+    <string>Cette application a besoin d'accéder à votre caméra pour prendre des photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+    <string>Cette application a besoin d'accéder à votre galerie pour sélectionner des images.</string>
+
+    <!-- Localisation (ACCESS_FINE_LOCATION / ACCESS_COARSE_LOCATION) -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Cette application a besoin d'accéder à votre position pour fournir des fonctionnalités de localisation.</string>
+
+	<!-- Localisation en arrière-plan (ACCESS_BACKGROUND_LOCATION) -->
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Cette application a besoin d'accéder à votre position en permanence pour des fonctionnalités en arrière-plan.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Cette application a besoin d'accéder à votre position en permanence pour des fonctionnalités en arrière-plan.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+    <string>Cette application a besoin d'accéder à vos fichiers pour sauvegarder des documents.</string>
 </dict>
 </plist>

@@ -13,7 +13,7 @@ class AuthService {
   Future<Map<String, dynamic>?> login(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('${baseUrl}api/auth/login'),
+        Uri.parse('${baseUrl}api/v2/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
@@ -93,7 +93,7 @@ class AuthService {
   Future<String?> forgot_password(String email) async {
     try {
       final response = await http.post(
-        Uri.parse('${baseUrl}api/auth/users/forgot-password'),
+        Uri.parse('${baseUrl}api/v2/auth/users/forgot-password'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({"email": email}),
       );
@@ -113,7 +113,7 @@ class AuthService {
   Future<String?> verify_email(String code, String email) async {
     try {
       final response = await http.post(
-        Uri.parse('${baseUrl}api/auth/users/verify-otp'),
+        Uri.parse('${baseUrl}api/v2/auth/users/verify-otp'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'code': code}),
       );

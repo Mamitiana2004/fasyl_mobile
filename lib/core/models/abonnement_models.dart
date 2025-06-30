@@ -88,4 +88,40 @@ class AbonnementModel {
     return name.toLowerCase().contains('premium') ||
         name.toLowerCase().contains('annuel');
   }
+
+  /// Calcule la date de fin d'abonnement à partir d'une date de début donnée
+  /// Si aucune date de début n'est fournie, utilise la date actuelle
+  DateTime getEndDate([DateTime? startDate]) {
+    final start = startDate ?? DateTime.now();
+    return start.add(Duration(days: daysDuration));
+  }
+
+  /// Calcule la date de fin d'abonnement formatée
+  /// Si aucune date de début n'est fournie, utilise la date actuelle
+  String getFormattedEndDate([DateTime? startDate]) {
+    final endDate = getEndDate(startDate);
+    return '${endDate.day.toString().padLeft(2, '0')}/${endDate.month.toString().padLeft(2, '0')}/${endDate.year}';
+  }
+
+  /// Vérifie si l'abonnement est encore actif à une date donnée
+  /// Si aucune date de début n'est fournie, utilise la date de création
+  bool isActiveAt(DateTime checkDate, [DateTime? startDate]) {
+    final start = startDate ?? createdAt;
+    final end = getEndDate(start);
+    return checkDate.isBefore(end) || checkDate.isAtSameMomentAs(end);
+  }
+
+  /// Calcule le nombre de jours restants depuis une date de début donnée
+  /// Retourne 0 si l'abonnement est expiré
+  int getRemainingDays([DateTime? startDate]) {
+    final start = startDate ?? DateTime.now();
+    final end = getEndDate(start);
+    final now = DateTime.now();
+
+    if (now.isAfter(end)) {
+      return 0; // Abonnement expiré
+    }
+
+    return end.difference(now).inDays + 1;
+  }
 }
